@@ -58,9 +58,6 @@ public:
     }
 };
 
-using point3 = vec3;//alias for vec3
-
-
 // Vector Utility Functions
 
 inline std::ostream& operator<<(std::ostream& out, const vec3& v) 
