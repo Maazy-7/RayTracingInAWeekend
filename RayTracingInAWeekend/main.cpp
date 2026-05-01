@@ -3,25 +3,37 @@
 #include "vec3.h"
 #include "ray.h"
 #include "color.h"
+#include "hittable.h"
+#include "sphere.h"
+#include "hittable_list.h"
+#include "util.h"
 
 
-bool hit_sphere(const vec3& center, double radius, const ray& r) 
+double hit_sphere(const vec3& center, double radius, const ray& r)
 {
     vec3 oc = center - r.origin();
-    double a = dot(r.direction(), r.direction());
-    double b = -2.0 * dot(r.direction(), oc);
-    double c = dot(oc, oc) - radius * radius;
-    double discriminant = b * b - 4 * a * c;
-    return (discriminant >= 0);
+    double a = r.direction().length_squared();
+    double h = dot(r.direction(), oc);
+    double c = oc.length_squared() - radius*radius;
+    double discriminant = h*h - a*c;
+    if (discriminant < 0) 
+    {
+        return -1.0;
+    }
+    else 
+    {
+        return (h - std::sqrt(discriminant)) / a;
+    }
 }
 
 
-vec3 ray_color(const ray& r) 
-{
-    if (hit_sphere(vec3(0, 0, -1), 0.5, r))
+vec3 ray_color(const ray& r, const hittable& world) {
+    hit_record rec;
+    if (world.hit(r, 0, infinity, rec)) 
     {
-        return vec3(1, 0, 0);
+        return 0.5 * (rec.normal + vec3(1, 1, 1));
     }
+
     vec3 unit_direction = unit_vector(r.direction());
     double a = 0.5 * (unit_direction.y + 1.0);
     return (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
@@ -37,6 +49,13 @@ int main()
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
+
+    // World
+
+    hittable_list world;
+
+    world.add(std::make_shared<sphere>(vec3(0, 0, -1), 0.5));
+    world.add(std::make_shared<sphere>(vec3(0, -100.5, -1), 100));
 
     // Camera
 
@@ -72,7 +91,7 @@ int main()
             vec3 ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
 
-            vec3 pixel_color = ray_color(r);
+            vec3 pixel_color = ray_color(r, world);
             write_color(std::cout, pixel_color);
         }
     }
