@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "hittable.h"
 #include "color.h"
 
@@ -8,9 +10,11 @@ class camera
 public:
     /* Public Camera Parameters Here */
 
+    //default values
     double aspect_ratio = 1.0;  // Ratio of image width over height
     int    image_width = 100;  // Rendered image width in pixel count
     int    samples_per_pixel = 10;   // Count of random samples for each pixel
+    int    max_depth = 10;   // Maximum number of ray bounces into scene
 
 
     void render(const hittable& world) 
@@ -19,22 +23,34 @@ public:
 
         std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
+        auto start = std::chrono::high_resolution_clock::now();
+        auto p0 = start;
+        double averagePixelTime = 0.0;
+
         for (int j = 0; j < image_height; j++) 
         {
             std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++) 
             {
+                p0 = std::chrono::high_resolution_clock::now();
+
                 vec3 pixel_color(0, 0, 0);
                 for (int sample = 0; sample < samples_per_pixel; sample++) 
                 {
                     ray r = get_ray(i, j);
-                    pixel_color += ray_color(r, world);
+                    pixel_color += ray_color(r, max_depth, world);
                 }
                 write_color(std::cout, pixel_samples_scale * pixel_color);
+                
+                auto p1 = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> elapsedPixelTime = p1 - p0;
+                averagePixelTime += elapsedPixelTime.count() / (image_height*image_width);
             }
         }
 
-        std::clog << "\rDone.                 \n";
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::clog << "\rDone, Frame time: " << elapsed.count() << "s, Average pixel write time: " << averagePixelTime*1000 << "ms \n";
     }
 
 private:
@@ -95,13 +111,17 @@ private:
         return vec3(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
-    vec3 ray_color(const ray& r, const hittable& world) const
+    vec3 ray_color(const ray& r, int depth, const hittable& world) const
     {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if (depth <= 0) { return vec3(0, 0, 0); }
+
         hit_record rec;
 
-        if (world.hit(r, interval(0, infinity), rec)) 
+        if (world.hit(r, interval(0.001, infinity), rec)) 
         {
-            return 0.5 * (rec.normal + vec3(1, 1, 1));
+            vec3 direction = rec.normal + random_unit_vector();
+            return 0.5 * ray_color(ray(rec.p, direction), depth-1, world);
         }
 
         vec3 unit_direction = unit_vector(r.direction());
