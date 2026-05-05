@@ -6,8 +6,8 @@
 class sphere : public hittable 
 {
 public:
-    sphere(const vec3& center, double radius) 
-        : center(center), radius(std::fmax(0, radius)) 
+    sphere(const vec3& center, double radius, std::shared_ptr<material> material) 
+        : center(center), radius(std::fmax(0, radius)) , mat(material)
     {
     
     }
@@ -36,6 +36,7 @@ public:
         rec.p = r.at(rec.t);
         vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat = mat;
 
         return true;
     }
@@ -43,4 +44,5 @@ public:
 private:
     vec3 center;
     double radius;
+    std::shared_ptr<material> mat;
 };
