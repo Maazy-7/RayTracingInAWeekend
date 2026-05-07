@@ -16,9 +16,9 @@
         std::shared_ptr<lambertian> ground_material = std::make_shared<lambertian>(vec3(0.5, 0.5, 0.5));
         world.add(std::make_shared<sphere>(vec3(0, -1000, 0), 1000, ground_material));
 
-        for (int a = -2; a < 2; a++) 
+        for (int a = -4; a < 4; a++) 
         {
-            for (int b = -2; b < 2; b++) 
+            for (int b = -4; b < 4; b++) 
             {
                 double choose_mat = random_double();
                 vec3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
@@ -53,7 +53,9 @@
         }
 
         std::shared_ptr<dielectric> material1 = std::make_shared<dielectric>(1.5);
+        std::shared_ptr<dielectric> material_bubble = std::make_shared<dielectric>(1.0/1.5);
         world.add(std::make_shared<sphere>(vec3(0, 1, 0), 1.0, material1));
+        world.add(std::make_shared<sphere>(vec3(0, 1, 0), 0.7, material_bubble));
 
         std::shared_ptr<lambertian> material2 = std::make_shared<lambertian>(vec3(0.4, 0.2, 0.1));
         world.add(std::make_shared<sphere>(vec3(-4, 1, 0), 1.0, material2));
@@ -64,17 +66,17 @@
         camera cam;
 
         cam.aspect_ratio = 16.0 / 9.0;
-        cam.image_width = 600;
+        cam.image_width = 1000;
         cam.samples_per_pixel = 70;
         cam.max_depth = 10;
 
-        cam.vfov = 20;
-        cam.lookfrom = vec3(13, 2, 3);
+        cam.vfov = 40;
+        cam.lookfrom = vec3(5, 2, 6);
         cam.lookat = vec3(0, 0, 0);
         cam.vup = vec3(0, 1, 0);
 
-        cam.defocus_angle = 0.6;
-        cam.focus_dist = 10.0;
+        cam.defocus_angle = 0.2;
+        cam.focus_dist = 14.0;
 
         cam.render(world);
     }

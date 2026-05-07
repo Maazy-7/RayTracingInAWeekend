@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include <fstream>
 
 #include "hittable.h"
 #include "material.h"
@@ -33,7 +34,9 @@ public:
     {
         initialize();
 
-        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        std::ofstream out("image.ppm", std::ios::binary);
+
+        out << "P6\n" << image_width << ' ' << image_height << "\n255\n";
 
 #if 0
         auto start = std::chrono::high_resolution_clock::now();
@@ -71,24 +74,19 @@ public:
 
         auto start = std::chrono::high_resolution_clock::now();
 
+        constexpr unsigned int thread_amount = 16 - 2;
 
-        std::thread t0(&camera::render_thread, this, 0, 8);
-        std::thread t1(&camera::render_thread, this, 1, 8);
-        std::thread t2(&camera::render_thread, this, 2, 8);
-        std::thread t3(&camera::render_thread, this, 3, 8);
-        std::thread t4(&camera::render_thread, this, 4, 8);
-        std::thread t5(&camera::render_thread, this, 5, 8);
-        std::thread t6(&camera::render_thread, this, 6, 8);
-        std::thread t7(&camera::render_thread, this, 7, 8);
+        std::thread arr[thread_amount];
 
-        t0.join();
-        t1.join();
-        t2.join();
-        t3.join();
-        t4.join();
-        t5.join();
-        t6.join();
-        t7.join();
+        for (int i = 0; i < thread_amount; i++) 
+        {
+            arr[i] = std::thread(&camera::render_thread, this, i, thread_amount);
+        }
+
+        for (int i = 0; i < thread_amount; i++) 
+        {
+            arr[i].join();
+        }
 
         auto render_finish = std::chrono::high_resolution_clock::now();
 
@@ -99,7 +97,7 @@ public:
             {
                 std::clog << "\rScanlines remaining: " << scan_lines_remaining-- << ' ' << std::flush;
             }
-            write_color(std::cout, framebuffer[i]);
+            write_color(out, framebuffer[i]);
         }
 
         auto write_finish = std::chrono::high_resolution_clock::now();
@@ -135,7 +133,6 @@ private:
         image_height = (image_height < 1) ? 1 : image_height;
         scan_lines = image_height;
         framebuffer.resize(image_width*image_height);
-
 
         pixel_samples_scale = 1.0 / samples_per_pixel;
 

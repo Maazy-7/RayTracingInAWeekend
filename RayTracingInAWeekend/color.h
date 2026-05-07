@@ -25,10 +25,13 @@ void write_color(std::ostream& out, const vec3& pixel_color)
 
     // Translate the [0,1] component values to the byte range [0,255].
     static const interval intensity(0.000, 0.999);
-    int rbyte = int(256 * intensity.clamp(r));
-    int gbyte = int(256 * intensity.clamp(g));
-    int bbyte = int(256 * intensity.clamp(b));
-
-    // Write out the pixel color components.
-    out << rbyte << ' ' << gbyte << ' ' << bbyte << '\n';
+    
+    unsigned char color[3]
+    {
+        static_cast<unsigned char>(256 * intensity.clamp(r)),
+        static_cast<unsigned char>(256 * intensity.clamp(g)),
+        static_cast<unsigned char>(256 * intensity.clamp(b))
+    };
+    
+    out.write(reinterpret_cast<char*>(color), 3);
 }
