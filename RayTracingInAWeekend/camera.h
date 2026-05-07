@@ -1,6 +1,9 @@
 #pragma once
 
 #include <chrono>
+#include <vector>
+#include <thread>
+#include <atomic>
 
 #include "hittable.h"
 #include "material.h"
@@ -32,6 +35,7 @@ public:
 
         std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
+#if 0
         auto start = std::chrono::high_resolution_clock::now();
         auto p0 = start;
         double averagePixelTime = 0.0;
@@ -60,7 +64,55 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
         std::clog << "\rDone, Frame time: " << elapsed.count() << "s, Average pixel write time: " << averagePixelTime*1000 << "ms \n";
+
+#else
+        
+        world_list = &world;
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+
+        std::thread t0(&camera::render_thread, this, 0, 8);
+        std::thread t1(&camera::render_thread, this, 1, 8);
+        std::thread t2(&camera::render_thread, this, 2, 8);
+        std::thread t3(&camera::render_thread, this, 3, 8);
+        std::thread t4(&camera::render_thread, this, 4, 8);
+        std::thread t5(&camera::render_thread, this, 5, 8);
+        std::thread t6(&camera::render_thread, this, 6, 8);
+        std::thread t7(&camera::render_thread, this, 7, 8);
+
+        t0.join();
+        t1.join();
+        t2.join();
+        t3.join();
+        t4.join();
+        t5.join();
+        t6.join();
+        t7.join();
+
+        auto render_finish = std::chrono::high_resolution_clock::now();
+
+        int scan_lines_remaining = image_height-1;
+        for (int i = 0; i < framebuffer.size(); i++) 
+        {
+            if (i % image_width == 0) 
+            {
+                std::clog << "\rScanlines remaining: " << scan_lines_remaining-- << ' ' << std::flush;
+            }
+            write_color(std::cout, framebuffer[i]);
+        }
+
+        auto write_finish = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> render_time = render_finish - start;
+        std::chrono::duration<double> write_time = write_finish - render_finish;
+
+        std::clog << "\rDone, render time: " << render_time.count() << "s, write time: " << write_time.count() << ", total " << (render_time.count()+write_time.count()) << "\n";
+
+#endif
     }
+
+    
 
 private:
     int    image_height;   // Rendered image height
@@ -72,11 +124,18 @@ private:
     vec3   u, v, w;        // Camera frame basis vectors
     vec3   defocus_disk_u; // Defocus disk horizontal radius
     vec3   defocus_disk_v; // Defocus disk vertical radius
+    std::vector<vec3> framebuffer; //framebuffer - vector that stores all pixels of the image
+    const hittable* world_list;
+    std::atomic<int> scan_lines;
+
 
     void initialize() 
     {
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
+        scan_lines = image_height;
+        framebuffer.resize(image_width*image_height);
+
 
         pixel_samples_scale = 1.0 / samples_per_pixel;
 
@@ -111,6 +170,30 @@ private:
         double defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
         defocus_disk_u = u * defocus_radius;
         defocus_disk_v = v * defocus_radius;
+    }
+
+    void render_thread(int thread_id, int thread_count) 
+    {
+        for (int j = thread_id; j < image_height; j += thread_count) 
+        {
+            for (int i = 0; i < image_width; i++) 
+            {
+                renderPixel(i,j);
+            }
+            std::clog << "\rScanlines remaining: " << --scan_lines << ' ' << std::flush;
+        }
+    }
+
+    void renderPixel(int i, int j)
+    {
+        vec3 pixel_color(0, 0, 0);
+        for (int sample = 0; sample < samples_per_pixel; sample++)
+        {
+            ray r = get_ray(i, j);
+            pixel_color += ray_color(r, max_depth, *world_list);
+        }
+        pixel_color *= pixel_samples_scale;
+        framebuffer[j * image_width + i] = pixel_color;
     }
 
     ray get_ray(int i, int j) const 
