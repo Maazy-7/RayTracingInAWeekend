@@ -39,7 +39,7 @@ private:
 class metal : public material 
 {
 public:
-    metal(const vec3& albedo, double fuzz) 
+    metal(const vec3& albedo, float fuzz) 
         : albedo(albedo), fuzziness(fuzz < 1 ? fuzz : 1)
     {
     
@@ -56,13 +56,13 @@ public:
 
 private:
     vec3 albedo;
-    double fuzziness;
+    float fuzziness;
 };
 
 class dielectric : public material 
 {
 public:
-    dielectric(double refraction_index) 
+    dielectric(float refraction_index) 
         : refraction_index(refraction_index) 
     {
     
@@ -70,17 +70,17 @@ public:
 
     bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override 
     {
-        attenuation = vec3(1.0, 1.0, 1.0);
-        double ri = rec.front_face ? (1.0 / refraction_index) : refraction_index;
+        attenuation = vec3(1.0f, 1.0f, 1.0f);
+        float ri = rec.front_face ? (1.0f / refraction_index) : refraction_index;
 
         vec3 unit_direction = unit_vector(r_in.direction());
-        double cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
-        double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
+        float cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0f);
+        float sin_theta = std::sqrt(1.0f - cos_theta * cos_theta);
 
-        bool cannot_refract = ri * sin_theta > 1.0;
+        bool cannot_refract = ri * sin_theta > 1.0f;
         vec3 direction;
 
-        if (cannot_refract || reflectance(cos_theta, ri) > random_double())
+        if (cannot_refract || reflectance(cos_theta, ri) > random_float())
         {
             direction = reflect(unit_direction, rec.normal);
         }
@@ -96,13 +96,13 @@ public:
 private:
     // Refractive index in vacuum or air, or the ratio of the material's refractive index over
     // the refractive index of the enclosing media
-    double refraction_index;
+    float refraction_index;
 
-    static double reflectance(double cosine, double refraction_index) 
+    static float reflectance(float cosine, float refraction_index) 
     {
         // Use Schlick's approximation for reflectance.
-        double r0 = (1 - refraction_index) / (1 + refraction_index);
+        float r0 = (1 - refraction_index) / (1 + refraction_index);
         r0 = r0 * r0;
-        return r0 + (1 - r0) * std::pow((1 - cosine), 5);
+        return r0 + (1.f - r0) * (float)std::pow((1.f - cosine), 5);
     }
 };

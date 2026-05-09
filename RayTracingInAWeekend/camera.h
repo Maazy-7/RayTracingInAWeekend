@@ -16,18 +16,18 @@ public:
     /* Public Camera Parameters Here */
 
     //default values
-    double aspect_ratio = 1.0;  // Ratio of image width over height
+    float aspect_ratio = 1.0f;  // Ratio of image width over height
     int    image_width = 100;  // Rendered image width in pixel count
     int    samples_per_pixel = 10;   // Count of random samples for each pixel
     int    max_depth = 10;   // Maximum number of ray bounces into scene
 
-    double vfov = 90;//vertical field of view
+    float vfov = 90;//vertical field of view
     vec3 lookfrom = vec3(0, 0, 0);   // Point camera is looking from
     vec3  lookat = vec3(0, 0, -1);  // Point camera is looking at
     vec3      vup = vec3(0, 1, 0); // Camera-relative "up" direction
 
-    double defocus_angle = 0;  // Variation angle of rays through each pixel
-    double focus_dist = 10;    // Distance from camera lookfrom point to plane of perfect focus
+    float defocus_angle = 0;  // Variation angle of rays through each pixel
+    float focus_dist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
 
     void render(const hittable& world) 
@@ -41,7 +41,7 @@ public:
 #if 0
         auto start = std::chrono::high_resolution_clock::now();
         auto p0 = start;
-        double averagePixelTime = 0.0;
+        float averagePixelTime = 0.0f;
 
         for (int j = 0; j < image_height; j++) 
         {
@@ -59,13 +59,13 @@ public:
                 write_color(std::cout, pixel_samples_scale * pixel_color);
                 
                 auto p1 = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> elapsedPixelTime = p1 - p0;
+                std::chrono::duration<float> elapsedPixelTime = p1 - p0;
                 averagePixelTime += elapsedPixelTime.count() / (image_height*image_width);
             }
         }
 
         auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
+        std::chrono::duration<float> elapsed = end - start;
         std::clog << "\rDone, Frame time: " << elapsed.count() << "s, Average pixel write time: " << averagePixelTime*1000 << "ms \n";
 
 #else
@@ -102,8 +102,8 @@ public:
 
         auto write_finish = std::chrono::high_resolution_clock::now();
 
-        std::chrono::duration<double> render_time = render_finish - start;
-        std::chrono::duration<double> write_time = write_finish - render_finish;
+        std::chrono::duration<float> render_time = render_finish - start;
+        std::chrono::duration<float> write_time = write_finish - render_finish;
 
         std::clog << "\rDone, render time: " << render_time.count() << "s, write time: " << write_time.count() << ", total " << (render_time.count()+write_time.count()) << "\n";
 
@@ -114,7 +114,7 @@ public:
 
 private:
     int    image_height;   // Rendered image height
-    double pixel_samples_scale;  // Color scale factor for a sum of pixel samples
+    float pixel_samples_scale;  // Color scale factor for a sum of pixel samples
     vec3   center;         // Camera center
     vec3   pixel00_loc;    // Location of pixel 0, 0
     vec3   pixel_delta_u;  // Offset to pixel to the right
@@ -134,16 +134,16 @@ private:
         scan_lines = image_height;
         framebuffer.resize(image_width*image_height);
 
-        pixel_samples_scale = 1.0 / samples_per_pixel;
+        pixel_samples_scale = 1.0f / samples_per_pixel;
 
         center = lookfrom;
 
         // Determine viewport dimensions.
-        //double focal_length = (lookfrom - lookat).length();
-        double theta = degrees_to_radians(vfov);
-        double h = std::tan(theta / 2);
-        double viewport_height = 2 * h * focus_dist;
-        double viewport_width = viewport_height * (double(image_width) / image_height);
+        //float focal_length = (lookfrom - lookat).length();
+        float theta = degrees_to_radians(vfov);
+        float h = std::tan(theta / 2);
+        float viewport_height = 2 * h * focus_dist;
+        float viewport_width = viewport_height * (float(image_width) / image_height);
 
         // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
         w = unit_vector(lookfrom - lookat);
@@ -155,16 +155,16 @@ private:
         vec3 viewport_v = viewport_height * -v;
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-        pixel_delta_u = viewport_u / image_width;
-        pixel_delta_v = viewport_v / image_height;
+        pixel_delta_u = viewport_u / (float)image_width;
+        pixel_delta_v = viewport_v / (float)image_height;
 
         // Calculate the location of the upper left pixel.
         vec3 viewport_upper_left =
             center - focus_dist * w - viewport_u / 2 - viewport_v / 2;
-        pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
         // Calculate the camera defocus disk basis vectors.
-        double defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
+        float defocus_radius = focus_dist * std::tan(degrees_to_radians(defocus_angle / 2));
         defocus_disk_u = u * defocus_radius;
         defocus_disk_v = v * defocus_radius;
     }
@@ -206,7 +206,7 @@ private:
         auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
         vec3 ray_direction = pixel_sample - ray_origin;
 
-        auto ray_time = random_double();
+        auto ray_time = random_float();
 
         return ray(ray_origin, ray_direction, ray_time);
     }
@@ -214,7 +214,7 @@ private:
     vec3 sample_square() const 
     {
         // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-        return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+        return vec3(random_float() - 0.5f, random_float() - 0.5f, 0);
     }
 
     vec3 defocus_disk_sample() const 
@@ -231,7 +231,7 @@ private:
 
         hit_record rec;
 
-        if (world.hit(r, interval(0.001, infinity), rec)) 
+        if (world.hit(r, interval(0.001f, infinity), rec)) 
         {
             ray scattered;
             vec3 attenuation;
@@ -243,7 +243,7 @@ private:
         }
 
         vec3 unit_direction = unit_vector(r.direction());
-        vec3 a = 0.5 * (unit_direction.y + 1.0);
-        return (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+        vec3 a = 0.5f * (unit_direction.y + 1.0f);
+        return (1.0f - a) * vec3(1.0f, 1.0f, 1.0f) + a * vec3(0.5f, 0.7f, 1.0f);
     }
 };

@@ -7,16 +7,16 @@ class sphere : public hittable
 {
 public:
     //Stationary sphere
-    sphere(const vec3& static_center, double radius, std::shared_ptr<material> material) 
-        : center(static_center, vec3(0,0,0)), radius(std::fmax(0, radius)) , mat(material)
+    sphere(const vec3& static_center, float radius, std::shared_ptr<material> material) 
+        : center(static_center, vec3(0,0,0)), radius(std::fmax((float)0, radius)) , mat(material)
     {
         vec3 rvec = vec3(radius, radius, radius);
         bbox = aabb(static_center - rvec, static_center + rvec);
     }
 
     //Moving sphere
-    sphere(const vec3& center1, const vec3& center2, double radius, std::shared_ptr<material> material)
-        : center(center1, center2 - center1), radius(std::fmax(0, radius)), mat(material)
+    sphere(const vec3& center1, const vec3& center2, float radius, std::shared_ptr<material> material)
+        : center(center1, center2 - center1), radius(std::fmax((float)0, radius)), mat(material)
     {
         vec3 rvec = vec3(radius, radius, radius);
         aabb box1(center.at(0) - rvec, center.at(0) + rvec);
@@ -28,17 +28,17 @@ public:
     {
         vec3 current_center = center.at(r.time());
         vec3 oc = current_center - r.origin();
-        double a = r.direction().length_squared();
-        double h = dot(r.direction(), oc);
-        double c = oc.length_squared() - radius * radius;
+        float a = r.direction().length_squared();
+        float h = dot(r.direction(), oc);
+        float c = oc.length_squared() - radius * radius;
 
-        double discriminant = h * h - a * c;
+        float discriminant = h * h - a * c;
         if (discriminant < 0) { return false; }
 
-        double sqrtd = std::sqrt(discriminant);
+        float sqrtd = std::sqrt(discriminant);
 
         // Find the nearest root that lies in the acceptable range.
-        double root = (h - sqrtd) / a;
+        float root = (h - sqrtd) / a;
         if (root <= ray_t.min || ray_t.max <= root) 
         {
             root = (h + sqrtd) / a;
@@ -58,7 +58,7 @@ public:
 
 private:
     ray center;
-    double radius;
+    float radius;
     std::shared_ptr<material> mat;
     aabb bbox;
 };

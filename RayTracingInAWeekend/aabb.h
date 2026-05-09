@@ -48,10 +48,10 @@ public:
         for (int axis = 0; axis < 3; axis++) 
         {
             const interval& ax = axis_interval(axis);
-            const double adinv = 1.0 / ray_dir[axis];
+            const float adinv = 1.0f / ray_dir[axis];
 
-            double t0 = (ax.min - ray_orig[axis]) * adinv;
-            double t1 = (ax.max - ray_orig[axis]) * adinv;
+            float t0 = (ax.min - ray_orig[axis]) * adinv;
+            float t1 = (ax.max - ray_orig[axis]) * adinv;
 
             if (t0 < t1) 
             {

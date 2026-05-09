@@ -2,7 +2,6 @@
 
 #include "hittable.h"
 
-
 #include <memory>
 #include <vector>
 
@@ -27,7 +26,7 @@ public:
     {
         hit_record temp_rec;
         bool hit_anything = false;
-        double closest_so_far = ray_t.max;
+        float closest_so_far = ray_t.max;
 
         for (const auto& object : hittable_objects) 
         {

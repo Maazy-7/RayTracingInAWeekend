@@ -8,25 +8,25 @@
 class vec3 
 {
 public:
-    double x, y, z;
+    float x, y, z;
 
     vec3() 
         : x(0), y(0), z(0)
     {
     
     }
-    vec3(double v) 
+    vec3(float v) 
         : x(v), y(v), z(v)
     {
     
     }
-    vec3(double vx, double vy, double vz) 
+    vec3(float vx, float vy, float vz) 
         : x(vx), y(vy), z(vz)
     {
     
     }
 
-    const double& operator[](int i) const
+    const float& operator[](int i) const
     {
         return *(&x + i);
     }
@@ -41,7 +41,7 @@ public:
         return *this;
     }
 
-    vec3& operator*=(double t) 
+    vec3& operator*=(float t) 
     {
         x *= t;
         y *= t;
@@ -49,17 +49,17 @@ public:
         return *this;
     }
 
-    vec3& operator/=(double t) 
+    vec3& operator/=(float t) 
     {
         return *this *= 1 / t;
     }
 
-    double length() const 
+    float length() const 
     {
         return std::sqrt(length_squared());
     }
 
-    double length_squared() const 
+    float length_squared() const 
     {
         return x * x + y * y + z * z;
     }
@@ -73,12 +73,12 @@ public:
 
     static vec3 random() 
     {
-        return vec3(random_double(), random_double(), random_double());
+        return vec3(random_float(), random_float(), random_float());
     }
 
-    static vec3 random(double min, double max) 
+    static vec3 random(float min, float max) 
     {
-        return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
+        return vec3(random_float(min, max), random_float(min, max), random_float(min, max));
     }
 };
 
@@ -104,22 +104,22 @@ inline vec3 operator*(const vec3& u, const vec3& v)
     return vec3(u.x * v.x, u.y * v.y, u.z * v.z);
 }
 
-inline vec3 operator*(double t, const vec3& v) 
+inline vec3 operator*(float t, const vec3& v) 
 {
     return vec3(t * v.x, t * v.y, t * v.z);
 }
 
-inline vec3 operator*(const vec3& v, double t) 
+inline vec3 operator*(const vec3& v, float t) 
 {
     return t * v;
 }
 
-inline vec3 operator/(const vec3& v, double t) 
+inline vec3 operator/(const vec3& v, float t) 
 {
     return (1 / t) * v;
 }
 
-inline double dot(const vec3& u, const vec3& v) 
+inline float dot(const vec3& u, const vec3& v) 
 {
     return u.x * v.x
         + u.y * v.y
@@ -143,7 +143,7 @@ inline vec3 random_unit_vector()
     while (true) 
     {
         vec3 p = vec3::random(-1, 1);
-        double lensq = p.length_squared();
+        float lensq = p.length_squared();
         if (1e-160 < lensq && lensq <= 1) { return p / sqrt(lensq); }
     }
 }
@@ -151,7 +151,7 @@ inline vec3 random_unit_vector()
 inline vec3 random_on_hemisphere(const vec3& normal) 
 {
     vec3 on_unit_sphere = random_unit_vector();
-    if (dot(on_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
+    if (dot(on_unit_sphere, normal) > 0.0f) // In the same hemisphere as the normal
     {
         return on_unit_sphere;
     }
@@ -159,14 +159,14 @@ inline vec3 random_on_hemisphere(const vec3& normal)
     {
         return -on_unit_sphere;
     }
-    //return dot(on_unit_sphere, normal) > 0.0 ? on_unit_sphere : -on_unit_sphere;
+    //return dot(on_unit_sphere, normal) > 0.0f ? on_unit_sphere : -on_unit_sphere;
 }
 
 inline vec3 random_in_unit_disk() 
 {
     while (true) 
     {
-        vec3 p = vec3(random_double(-1, 1), random_double(-1, 1), 0);
+        vec3 p = vec3(random_float(-1, 1), random_float(-1, 1), 0);
         if (p.length_squared() < 1) { return p; }
     }
 }
@@ -176,10 +176,10 @@ inline vec3 reflect(const vec3& v, const vec3& n)
     return v - 2 * dot(v, n) * n;
 }
 
-inline vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) 
+inline vec3 refract(const vec3& uv, const vec3& n, float etai_over_etat) 
 {
-    double cos_theta = std::fmin(dot(-uv, n), 1.0);
+    float cos_theta = std::fmin(dot(-uv, n), 1.0f);
     vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    vec3 r_out_parallel = -std::sqrt(std::fabs(1.0 - r_out_perp.length_squared())) * n;
+    vec3 r_out_parallel = -std::sqrt(std::fabs(1.0f - r_out_perp.length_squared())) * n;
     return r_out_perp + r_out_parallel;
 }

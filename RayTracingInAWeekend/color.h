@@ -5,7 +5,7 @@
 #include <iostream>
 
 
-inline double linear_to_gamma(double linear_component)
+inline float linear_to_gamma(float linear_component)
 {
     if (linear_component > 0) { return std::sqrt(linear_component); }
 
@@ -14,9 +14,9 @@ inline double linear_to_gamma(double linear_component)
 
 void write_color(std::ostream& out, const vec3& pixel_color)
 {
-    double r = pixel_color.x;
-    double g = pixel_color.y;
-    double b = pixel_color.z;
+    float r = pixel_color.x;
+    float g = pixel_color.y;
+    float b = pixel_color.z;
 
     // Apply a linear to gamma transform for gamma 2
     r = linear_to_gamma(r);
@@ -24,7 +24,7 @@ void write_color(std::ostream& out, const vec3& pixel_color)
     b = linear_to_gamma(b);
 
     // Translate the [0,1] component values to the byte range [0,255].
-    static const interval intensity(0.000, 0.999);
+    static const interval intensity(0.000f, 0.999f);
     
     unsigned char color[3]
     {
