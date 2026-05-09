@@ -2,6 +2,7 @@
     #include <memory>
     #include <chrono>
 
+    #include "bvh_node.h"
     #include "camera.h"
     #include "hittable.h"
     #include "hittable_list.h"
@@ -32,7 +33,6 @@
                         // diffuse
                         vec3 albedo = vec3::random() * vec3::random();
                         sphere_material = std::make_shared<lambertian>(albedo);
-                        vec3 center2 = center + vec3(0, random_double(0, .5), 0);
                         world.add(std::make_shared<sphere>(center,0.2, sphere_material));
                     }
                     else if (choose_mat < 0.95) 
@@ -61,6 +61,8 @@
 
         std::shared_ptr<metal> material3 = std::make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0);
         world.add(std::make_shared<sphere>(vec3(4, 1, 0), 1.0, material3));
+
+        world = hittable_list(std::make_shared<bvh_node>(world));
 
         camera cam;
 

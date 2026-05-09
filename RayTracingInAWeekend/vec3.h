@@ -26,6 +26,11 @@ public:
     
     }
 
+    const double& operator[](int i) const
+    {
+        return *(&x + i);
+    }
+
     vec3 operator-() const { return vec3(-x, -y, -z); }
 
     vec3& operator+=(const vec3& v) 
