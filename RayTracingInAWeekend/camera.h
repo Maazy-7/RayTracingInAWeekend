@@ -10,6 +10,11 @@
 #include "material.h"
 #include "color.h"
 
+struct tile 
+{
+    int x0, y0, x1, y1;
+};
+
 class camera 
 {
 public:
@@ -33,6 +38,8 @@ public:
     void render(const hittable& world) 
     {
         initialize();
+
+        world_list = &world;
 
         std::ofstream out("image.ppm", std::ios::binary);
 
@@ -68,9 +75,7 @@ public:
         std::chrono::duration<float> elapsed = end - start;
         std::clog << "\rDone, Frame time: " << elapsed.count() << "s, Average pixel write time: " << averagePixelTime*1000 << "ms \n";
 
-#else
-        
-        world_list = &world;
+#elif 0
 
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -107,6 +112,42 @@ public:
 
         std::clog << "\rDone, render time: " << render_time.count() << "s, write time: " << write_time.count() << ", total " << (render_time.count()+write_time.count()) << "\n";
 
+#elif 1
+        constexpr unsigned int thread_amount = 16 - 2;
+        std::thread arr[thread_amount];
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (int i = 0; i < thread_amount; i++) 
+        {
+            arr[i] = std::thread(&camera::render_tile_thread, this);
+        }
+
+        for (int i = 0; i < thread_amount; i++)
+        {
+            arr[i].join();
+        }
+
+        auto render_finish = std::chrono::high_resolution_clock::now();
+
+        int scan_lines_remaining = image_height - 1;
+        for (int i = 0; i < framebuffer.size(); i++)
+        {
+            if (i % image_width == 0)
+            {
+                std::clog << "\rScanlines remaining: " << scan_lines_remaining-- << ' ' << std::flush;
+            }
+            write_color(out, framebuffer[i]);
+        }
+
+        auto write_finish = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<float> render_time = render_finish - start;
+        std::chrono::duration<float> write_time = write_finish - render_finish;
+
+        std::clog << "\rDone, render time: " << render_time.count() << "s, write time: " << write_time.count() << ", total " << (render_time.count() + write_time.count()) << "\n";
+
+
 #endif
     }
 
@@ -123,8 +164,11 @@ private:
     vec3   defocus_disk_u; // Defocus disk horizontal radius
     vec3   defocus_disk_v; // Defocus disk vertical radius
     std::vector<vec3> framebuffer; //framebuffer - vector that stores all pixels of the image
+    std::vector<tile> screen_tiles; //list storing all tiles that make up the screen
+    int tile_size = 16; //side length of tile size, tile area = tile size squared
     const hittable* world_list;
     std::atomic<int> scan_lines;
+    std::atomic<int> tiles_rendered = -1;
 
 
     void initialize() 
@@ -133,6 +177,8 @@ private:
         image_height = (image_height < 1) ? 1 : image_height;
         scan_lines = image_height;
         framebuffer.resize(image_width*image_height);
+        screen_tiles.reserve((image_width * image_height) / (tile_size*tile_size));
+        create_tiles();
 
         pixel_samples_scale = 1.0f / samples_per_pixel;
 
@@ -169,6 +215,30 @@ private:
         defocus_disk_v = v * defocus_radius;
     }
 
+    void create_tiles() 
+    {
+        for (int i = 0; i < image_height; i+= tile_size) 
+        {
+            for (int j = 0; j < image_width; j+= tile_size) 
+            {
+                int x1 = std::min(j + tile_size, image_width);
+                int y1 = std::min(i + tile_size, image_height);
+                screen_tiles.push_back({j,i,x1, y1});
+            }
+        }
+    }
+
+    void render_tile_thread() 
+    {
+        while (true) 
+        {
+            int tile_index = tiles_rendered++;
+            if (tile_index >= screen_tiles.size()) { break; }
+            render_tile(screen_tiles[tile_index]);
+            std::clog << "\rTiles remaining: " << (screen_tiles.size() - tiles_rendered) << ' ' << std::flush;
+        }
+    }
+
     void render_thread(int thread_id, int thread_count) 
     {
         for (int j = thread_id; j < image_height; j += thread_count) 
@@ -179,6 +249,17 @@ private:
             }
             std::clog << "\rScanlines remaining: " << --scan_lines << ' ' << std::flush;
         }
+    }
+
+    void render_tile(const tile& t) 
+    {
+        for (int i = t.y0; i < t.y1; i++) 
+        {
+            for (int j = t.x0; j < t.x1; j++) 
+            {
+                renderPixel(j,i);
+            }
+        } 
     }
 
     void renderPixel(int i, int j)
