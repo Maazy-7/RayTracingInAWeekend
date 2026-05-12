@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hittable.h"
+#include "texture.h"
 
 class material 
 {
@@ -17,7 +18,13 @@ class lambertian : public material
 {
 public:
     lambertian(const vec3& albedo) 
-        : albedo(albedo) 
+        : tex(std::make_shared<solid_color>(albedo)) 
+    {
+    
+    }
+
+    lambertian(std::shared_ptr<texture> tex) 
+        : tex(tex) 
     {
     
     }
@@ -28,12 +35,12 @@ public:
         // Catch degenerate scatter direction
         if (scatter_direction.near_zero()) { scatter_direction = rec.normal; }
         scattered = ray(rec.p, scatter_direction, r_in.time());
-        attenuation = albedo;
+        attenuation = tex->value(rec.u, rec.v, rec.p);
         return true;
     }
 
 private:
-    vec3 albedo;
+    std::shared_ptr<texture> tex;
 };
 
 class metal : public material 
@@ -103,6 +110,6 @@ private:
         // Use Schlick's approximation for reflectance.
         float r0 = (1 - refraction_index) / (1 + refraction_index);
         r0 = r0 * r0;
-        return r0 + (1.f - r0) * (float)std::pow((1.f - cosine), 5);
+        return r0 + (1.f - r0) * std::powf((1.f - cosine), 5);
     }
 };

@@ -75,7 +75,7 @@ public:
         std::chrono::duration<float> elapsed = end - start;
         std::clog << "\rDone, Frame time: " << elapsed.count() << "s, Average pixel write time: " << averagePixelTime*1000 << "ms \n";
 
-#elif 0
+#elif 1
 
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -112,7 +112,7 @@ public:
 
         std::clog << "\rDone, render time: " << render_time.count() << "s, write time: " << write_time.count() << ", total " << (render_time.count()+write_time.count()) << "\n";
 
-#elif 1
+#elif 0
         constexpr unsigned int thread_amount = 16 - 2;
         std::thread arr[thread_amount];
 

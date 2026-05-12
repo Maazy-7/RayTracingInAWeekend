@@ -8,14 +8,15 @@
     #include "hittable_list.h"
     #include "material.h"
     #include "sphere.h"
+    #include "texture.h"
 
 
     int main() 
     {
         hittable_list world;
 
-        std::shared_ptr<lambertian> ground_material = std::make_shared<lambertian>(vec3(0.5f, 0.5f, 0.5f));
-        world.add(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.f, ground_material));
+        std::shared_ptr<image_texture> earth_tex = std::make_shared<image_texture>("earthmap.jpg");
+        world.add(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.f, std::make_shared<lambertian>(vec3(0.5f, 0.5f, 0.5f))));
 
         for (int a = -4; a < 4; a++) 
         {
@@ -31,8 +32,9 @@
                     if (choose_mat < 0.8f) 
                     {
                         // diffuse
+                        int ran = random_int(0,1);
                         vec3 albedo = vec3::random() * vec3::random();
-                        sphere_material = std::make_shared<lambertian>(albedo);
+                        sphere_material = (ran) ? std::make_shared<lambertian>(albedo) : std::make_shared<lambertian>(earth_tex);
                         world.add(std::make_shared<sphere>(center,0.2f, sphere_material));
                     }
                     else if (choose_mat < 0.95f) 
@@ -65,11 +67,11 @@
         world = hittable_list(std::make_shared<bvh_node>(world));
 
         camera cam;
-
+        
         cam.aspect_ratio = 16.0f / 9.0f;
-        cam.image_width = 400;
+        cam.image_width = 600;
         cam.samples_per_pixel = 100;
-        cam.max_depth = 50;
+        cam.max_depth = 40;
 
         cam.vfov = 20;
         cam.lookfrom = vec3(13, 3, 3);
