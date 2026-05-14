@@ -15,8 +15,8 @@
     {
         hittable_list world;
 
-        std::shared_ptr<image_texture> earth_tex = std::make_shared<image_texture>("earthmap.jpg");
-        world.add(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.f, std::make_shared<lambertian>(vec3(0.5f, 0.5f, 0.5f))));
+        std::shared_ptr<noise_texture> noise_tex = std::make_shared<noise_texture>(10.f);
+        world.add(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.f, std::make_shared<lambertian>(noise_tex/*vec3(0.5f, 0.5f, 0.5f)*/)));
 
         for (int a = -4; a < 4; a++) 
         {
@@ -34,7 +34,7 @@
                         // diffuse
                         int ran = random_int(0,1);
                         vec3 albedo = vec3::random() * vec3::random();
-                        sphere_material = (ran) ? std::make_shared<lambertian>(albedo) : std::make_shared<lambertian>(earth_tex);
+                        sphere_material = (ran) ? std::make_shared<lambertian>(albedo) : std::make_shared<lambertian>(noise_tex);
                         world.add(std::make_shared<sphere>(center,0.2f, sphere_material));
                     }
                     else if (choose_mat < 0.95f) 
@@ -56,7 +56,7 @@
         }
 
         std::shared_ptr<dielectric> material1 = std::make_shared<dielectric>(1.5f);
-        world.add(std::make_shared<sphere>(vec3(0, 1, 0), 1.0f, material1));
+        world.add(std::make_shared<sphere>(vec3(0, 1, 0), 1.0f, std::make_shared<lambertian>(noise_tex)));
 
         std::shared_ptr<lambertian> material2 = std::make_shared<lambertian>(vec3(0.4f, 0.2f, 0.1f));
         world.add(std::make_shared<sphere>(vec3(-4, 1, 0), 1.0f, material2));

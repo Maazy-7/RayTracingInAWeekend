@@ -2,6 +2,7 @@
 
 #include "vec3.h"
 #include "image.h"
+#include "perlin.h"
 
 class texture 
 {
@@ -94,4 +95,23 @@ public:
 
 private:
     image image_tex;
+};
+
+class noise_texture : public texture 
+{
+public:
+    noise_texture(float scale_) 
+        :scale(scale_)
+    {
+    
+    }
+
+    vec3 value(float u, float v, const vec3& p) const override 
+    {
+        return vec3(.5f, .5f, .5f) * (1 + std::sinf(scale * p.z + 10 * noise.turb(p, 7)));
+    }
+
+private:
+    perlin noise;
+    float scale;
 };
