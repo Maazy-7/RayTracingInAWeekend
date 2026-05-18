@@ -79,6 +79,18 @@ public:
     }
 
     static const aabb empty, universe;
+
+private:
+
+    void pad_to_minimums() 
+    {
+        // Adjust the AABB so that no side is narrower than some delta, padding if necessary.
+
+        float delta = 0.0001f;
+        if (x.size() < delta) { x = x.expand(delta); }
+        if (y.size() < delta) { y = y.expand(delta); }
+        if (z.size() < delta) { z = z.expand(delta); }
+    }
 };
 
 const aabb aabb::empty = aabb(interval::empty, interval::empty, interval::empty);
