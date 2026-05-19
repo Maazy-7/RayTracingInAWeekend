@@ -13,7 +13,7 @@ public:
     aabb(const interval& x, const interval& y, const interval& z)
         : x(x), y(y), z(z) 
     {
-
+        pad_to_minimums();
     }
 
     aabb(const vec3& a, const vec3& b) 
@@ -21,9 +21,11 @@ public:
         // Treat the two points a and b as extrema for the bounding box, so we don't require a
         // particular minimum/maximum coordinate order.
 
-        x = (a.x <= b.x) ? interval(a.x, b.x) : interval(b.x, a.x);
-        y = (a.y <= b.y) ? interval(a.y, b.y) : interval(b.y, a.y);
-        z = (a.z <= b.z) ? interval(a.z, b.z) : interval(b.z, a.z);
+        x = interval(std::fmin(a.x, b.x), std::fmax(a.x, b.x));
+        y = interval(std::fmin(a.y, b.y), std::fmax(a.y, b.y));
+        z = interval(std::fmin(a.z, b.z), std::fmax(a.z, b.z));
+
+        pad_to_minimums();
     }
 
     aabb(const aabb& box0, const aabb& box1) 
@@ -69,13 +71,18 @@ public:
         return true;
     }
 
-    int longest_axis() const {
+    int longest_axis() const 
+    {
         // Returns the index of the longest axis of the bounding box.
 
         if (x.size() > y.size())
+        {
             return x.size() > z.size() ? 0 : 2;
+        }
         else
+        {
             return y.size() > z.size() ? 1 : 2;
+        }
     }
 
     static const aabb empty, universe;
