@@ -12,6 +12,11 @@ public:
     {
         return false;
     }
+
+    virtual vec3 emitted(float u, float v, const vec3& p) const 
+    {
+        return vec3(0, 0, 0);
+    }
 };
 
 class lambertian : public material 
@@ -112,4 +117,27 @@ private:
         r0 = r0 * r0;
         return r0 + (1.f - r0) * std::powf((1.f - cosine), 5);
     }
+};
+
+class diffuse_light : public material 
+{
+public:
+    diffuse_light(std::shared_ptr<texture> tex) 
+        : tex(tex) 
+    {
+    
+    }
+    diffuse_light(const vec3& emit) 
+        : tex(std::make_shared<solid_color>(emit)) 
+    {
+    
+    }
+
+    vec3 emitted(float u, float v, const vec3& p) const override 
+    {
+        return tex->value(u, v, p);
+    }
+
+private:
+    std::shared_ptr<texture> tex;
 };

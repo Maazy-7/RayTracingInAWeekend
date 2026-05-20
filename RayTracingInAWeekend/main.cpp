@@ -77,6 +77,7 @@
             cam.image_width = 600;
             cam.samples_per_pixel = 100;
             cam.max_depth = 40;
+            cam.background_color = vec3(0.70f, 0.80f, 1.00f);
 
             cam.vfov = 20;
             cam.lookfrom = vec3(13, 3, 3);
@@ -90,30 +91,29 @@
         }
         else if (scene_num == 1) 
         {
-            // Materials
-            std::shared_ptr<lambertian> left_red = std::make_shared<lambertian>(vec3(1.0f, 0.2f, 0.2f));
-            std::shared_ptr<lambertian> back_green = std::make_shared<lambertian>(vec3(0.2f, 1.0f, 0.2f));
-            std::shared_ptr<lambertian> right_blue = std::make_shared<lambertian>(vec3(0.2f, 0.2f, 1.0f));
-            std::shared_ptr<lambertian> upper_orange = std::make_shared<lambertian>(vec3(1.0f, 0.5f, 0.0f));
-            std::shared_ptr<lambertian> lower_teal = std::make_shared<lambertian>(vec3(0.2f, 0.8f, 0.8f));
+            auto red =   std::make_shared<lambertian>(vec3(.65f, .05f, .05f));
+            auto white = std::make_shared<lambertian>(vec3(.73f, .73f, .73f));
+            auto green = std::make_shared<lambertian>(vec3(.12f, .45f, .15f));
+            auto light = std::make_shared<diffuse_light>(vec3(15.f, 15.f, 15.f));
 
-            // Quads
-            world.add(std::make_shared<quad>(vec3(-3, -2, 5), vec3(0, 0, -4), vec3(0, 4, 0), left_red));
-            world.add(std::make_shared<quad>(vec3(-2, -2, 0), vec3(4, 0, 0), vec3(0, 4, 0), back_green));
-            world.add(std::make_shared<quad>(vec3(3, -2, 1), vec3(0, 0, 4), vec3(0, 4, 0), right_blue));
-            world.add(std::make_shared<quad>(vec3(-2, 3, 1), vec3(4, 0, 0), vec3(0, 0, 4), upper_orange));
-            world.add(std::make_shared<quad>(vec3(-2, -3, 5), vec3(4, 0, 0), vec3(0, 0, -4), lower_teal));
+            world.add(std::make_shared<quad>(vec3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green));
+            world.add(std::make_shared<quad>(vec3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red));
+            world.add(std::make_shared<quad>(vec3(443, 554, 502), vec3(-330, 0, 0), vec3(0, 0, -305), light));
+            world.add(std::make_shared<quad>(vec3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
+            world.add(std::make_shared<quad>(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white));
+            world.add(std::make_shared<quad>(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
 
             camera cam;
 
             cam.aspect_ratio = 1.0f;
-            cam.image_width = 400;
-            cam.samples_per_pixel = 100;
+            cam.image_width = 600;
+            cam.samples_per_pixel = 200;
             cam.max_depth = 50;
+            cam.background_color = vec3(0, 0, 0);
 
-            cam.vfov = 80;
-            cam.lookfrom = vec3(0, 0, 9);
-            cam.lookat = vec3(0, 0, 0);
+            cam.vfov = 40;
+            cam.lookfrom = vec3(278, 278, -800);
+            cam.lookat = vec3(278, 278, 0);
             cam.vup = vec3(0, 1, 0);
 
             cam.defocus_angle = 0;

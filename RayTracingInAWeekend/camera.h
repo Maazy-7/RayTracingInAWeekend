@@ -25,6 +25,7 @@ public:
     int    image_width = 100;  // Rendered image width in pixel count
     int    samples_per_pixel = 10;   // Count of random samples for each pixel
     int    max_depth = 10;   // Maximum number of ray bounces into scene
+    vec3   background_color;
 
     float vfov = 90;//vertical field of view
     vec3 lookfrom = vec3(0, 0, 0);   // Point camera is looking from
@@ -284,10 +285,10 @@ private:
             + ((i + offset.x) * pixel_delta_u)
             + ((j + offset.y) * pixel_delta_v);
 
-        auto ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
+        vec3 ray_origin = (defocus_angle <= 0) ? center : defocus_disk_sample();
         vec3 ray_direction = pixel_sample - ray_origin;
 
-        auto ray_time = random_float();
+        float ray_time = random_float();
 
         return ray(ray_origin, ray_direction, ray_time);
     }
@@ -312,19 +313,21 @@ private:
 
         hit_record rec;
 
-        if (world.hit(r, interval(0.001f, infinity), rec)) 
+        if (!world.hit(r, interval(0.001f, infinity), rec)) 
         {
-            ray scattered;
-            vec3 attenuation;
-            if (rec.mat->scatter(r, rec, attenuation, scattered))
-            {
-                return attenuation * ray_color(scattered, depth - 1, world);
-            }
-            return vec3(0, 0, 0);
+            return background_color;
         }
 
-        vec3 unit_direction = unit_vector(r.direction());
-        vec3 a = 0.5f * (unit_direction.y + 1.0f);
-        return (1.0f - a) * vec3(1.0f, 1.0f, 1.0f) + a * vec3(0.5f, 0.7f, 1.0f);
+        ray scattered;
+        vec3 attenuation;
+        vec3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+
+        if (!rec.mat->scatter(r, rec, attenuation, scattered))
+        {
+            return color_from_emission;
+        }
+        vec3 color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
+        
+        return color_from_emission + color_from_scatter;
     }
 };
