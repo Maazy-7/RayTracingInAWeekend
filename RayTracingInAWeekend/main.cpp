@@ -91,17 +91,34 @@
         }
         else if (scene_num == 1) 
         {
-            auto red =   std::make_shared<lambertian>(vec3(.65f, .05f, .05f));
-            auto white = std::make_shared<lambertian>(vec3(.73f, .73f, .73f));
-            auto green = std::make_shared<lambertian>(vec3(.12f, .45f, .15f));
-            auto light = std::make_shared<diffuse_light>(vec3(15.f, 15.f, 15.f));
+            std::shared_ptr<lambertian> red =   std::make_shared<lambertian>(vec3(.65f, .05f, .05f));
+            std::shared_ptr<lambertian> white = std::make_shared<lambertian>(vec3(.73f, .73f, .73f));
+            std::shared_ptr<lambertian> green = std::make_shared<lambertian>(vec3(.12f, .45f, .15f));
+            std::shared_ptr<diffuse_light> light = std::make_shared<diffuse_light>(vec3(15.f, 15.f, 15.f));
 
             world.add(std::make_shared<quad>(vec3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green));
             world.add(std::make_shared<quad>(vec3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red));
-            world.add(std::make_shared<quad>(vec3(443, 554, 502), vec3(-330, 0, 0), vec3(0, 0, -305), light));
+            world.add(std::make_shared<quad>(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), light));
             world.add(std::make_shared<quad>(vec3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
             world.add(std::make_shared<quad>(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white));
             world.add(std::make_shared<quad>(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
+
+            //world.add(std::make_shared<quad>(vec3(0, 0, 545), vec3(200, 0, 0), vec3(0, 200, 0), green));
+            //world.add(std::make_shared<quad>(vec3(355, 0, 545), vec3(200, 0, 0), vec3(0, 200, 0), red));
+            //world.add(std::make_shared<quad>(vec3(355, 355, 545), vec3(200, 0, 0), vec3(0, 200, 0), red));
+            //world.add(std::make_shared<quad>(vec3(0, 355, 545), vec3(200, 0, 0), vec3(0, 200, 0), green));
+            
+            std::shared_ptr<hittable> box1 = box(vec3(0, 0, 0), vec3(165, 330, 165), white);
+            box1 = std::make_shared<rotate_y>(box1, 15.f);
+            box1 = std::make_shared<translate>(box1, vec3(265, 0, 295));
+            world.add(box1);
+
+            std::shared_ptr<hittable> box2 = box(vec3(0, 0, 0), vec3(165, 165, 165), white);
+            box2 = std::make_shared<rotate_y>(box2, -18.f);
+            box2 = std::make_shared<translate>(box2, vec3(130, 0, 65));
+            world.add(box2);
+
+            //world = hittable_list(std::make_shared<bvh_node>(world));
 
             camera cam;
 

@@ -88,3 +88,27 @@ private:
     vec3 normal;
     float d;
 };
+
+inline std::shared_ptr<hittable_list> box(const vec3& a, const vec3& b, std::shared_ptr<material> mat)
+{
+    // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+
+    std::shared_ptr<hittable_list> sides = std::make_shared<hittable_list>();
+
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    vec3 min = vec3(std::fmin(a.x, b.x), std::fmin(a.y, b.y), std::fmin(a.z, b.z));
+    vec3 max = vec3(std::fmax(a.x, b.x), std::fmax(a.y, b.y), std::fmax(a.z, b.z));
+
+    vec3 dx = vec3(max.x - min.x, 0, 0);
+    vec3 dy = vec3(0, max.y - min.y, 0);
+    vec3 dz = vec3(0, 0, max.z - min.z);
+
+    sides->add(std::make_shared<quad>(vec3(min.x, min.y, max.z), dx, dy, mat)); // front
+    sides->add(std::make_shared<quad>(vec3(max.x, min.y, max.z), -dz, dy, mat)); // right
+    sides->add(std::make_shared<quad>(vec3(max.x, min.y, min.z), -dx, dy, mat)); // back
+    sides->add(std::make_shared<quad>(vec3(min.x, min.y, min.z), dz, dy, mat)); // left
+    sides->add(std::make_shared<quad>(vec3(min.x, max.y, max.z), dx, -dz, mat)); // top
+    sides->add(std::make_shared<quad>(vec3(min.x, min.y, min.z), dx, dz, mat)); // bottom
+
+    return sides;
+}
