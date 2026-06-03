@@ -17,6 +17,11 @@ public:
     {
         return vec3(0, 0, 0);
     }
+
+    virtual float scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const 
+    {
+        return 0;
+    }
 };
 
 class lambertian : public material 
@@ -36,12 +41,19 @@ public:
 
     bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override 
     {
-        vec3 scatter_direction = rec.normal + random_unit_vector();
+        vec3 scatter_direction = random_on_hemisphere(rec.normal); //rec.normal + random_unit_vector();
         // Catch degenerate scatter direction
         if (scatter_direction.near_zero()) { scatter_direction = rec.normal; }
         scattered = ray(rec.p, scatter_direction, r_in.time());
         attenuation = tex->value(rec.u, rec.v, rec.p);
         return true;
+    }
+
+    float scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const override 
+    {
+        /*float cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
+        return cos_theta < 0 ? 0 : cos_theta / pi;*/
+        return 1.f / (2.f * pi);
     }
 
 private:

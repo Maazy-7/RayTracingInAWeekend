@@ -122,8 +122,8 @@ int main()
         camera cam;
 
         cam.aspect_ratio = 1.0f;
-        cam.image_width = 1080;
-        cam.samples_per_pixel = 1500;
+        cam.image_width = 600;
+        cam.samples_per_pixel = 300;
         cam.max_depth = 50;
         cam.background_color = vec3(0, 0, 0);
 

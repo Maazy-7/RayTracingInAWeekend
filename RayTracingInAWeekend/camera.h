@@ -326,8 +326,15 @@ private:
         {
             return color_from_emission;
         }
-        vec3 color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
+
+        //vec3 color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
         
+        float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+        float pdf_value = 1.f/(2.f*pi);
+
+        vec3 color_from_scatter =
+            (attenuation * scattering_pdf * ray_color(scattered, depth - 1, world)) / pdf_value;
+
         return color_from_emission + color_from_scatter;
     }
 };
