@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hittable.h"
+#include "onb.h"
 #include "texture.h"
 
 class material 
@@ -8,7 +9,7 @@ class material
 public:
     virtual ~material() = default;
 
-    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const 
+    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const 
     {
         return false;
     }
@@ -39,13 +40,18 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override 
+    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
     {
-        vec3 scatter_direction = random_on_hemisphere(rec.normal); //rec.normal + random_unit_vector();
+        //vec3 scatter_direction = random_on_hemisphere(rec.normal); //rec.normal + random_unit_vector();
+        
+        onb uvw(rec.normal);
+        vec3 scatter_direction = uvw.transform(random_cosine_direction());
+        scattered = ray(rec.p, unit_vector(scatter_direction), r_in.time());
         // Catch degenerate scatter direction
         if (scatter_direction.near_zero()) { scatter_direction = rec.normal; }
         scattered = ray(rec.p, scatter_direction, r_in.time());
         attenuation = tex->value(rec.u, rec.v, rec.p);
+        pdf = dot(uvw.w(), scattered.direction()) / pi;
         return true;
     }
 
@@ -69,7 +75,7 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override 
+    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
     {
         vec3 reflected = reflect(r_in.direction(), rec.normal);
         reflected = unit_vector(reflected) + (fuzziness * random_unit_vector());
@@ -92,7 +98,7 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override 
+    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
     {
         attenuation = vec3(1.0f, 1.0f, 1.0f);
         float ri = rec.front_face ? (1.0f / refraction_index) : refraction_index;
@@ -169,11 +175,17 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override 
+    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
     {
         scattered = ray(rec.p, random_unit_vector(), r_in.time());
         attenuation = tex->value(rec.u, rec.v, rec.p);
+        pdf = 1 / (4 * pi);
         return true;
+    }
+
+    float scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const override 
+    {
+        return 1 / (4 * pi);
     }
 
 private:

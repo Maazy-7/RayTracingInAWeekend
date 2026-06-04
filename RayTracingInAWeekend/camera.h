@@ -320,9 +320,10 @@ private:
 
         ray scattered;
         vec3 attenuation;
+        float pdf_value;
         vec3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
 
-        if (!rec.mat->scatter(r, rec, attenuation, scattered))
+        if (!rec.mat->scatter(r, rec, attenuation, scattered, pdf_value))
         {
             return color_from_emission;
         }
@@ -330,7 +331,7 @@ private:
         //vec3 color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
         
         float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
-        float pdf_value = 1.f/(2.f*pi);
+        pdf_value = scattering_pdf;
 
         vec3 color_from_scatter =
             (attenuation * scattering_pdf * ray_color(scattered, depth - 1, world)) / pdf_value;
