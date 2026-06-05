@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include "hittable.h"
+#include "pdf.h"
 #include "material.h"
 #include "color.h"
 
@@ -36,11 +37,12 @@ public:
     float focus_dist = 10;    // Distance from camera lookfrom point to plane of perfect focus
 
 
-    void render(const hittable& world) 
+    void render(const hittable& world, const hittable& lights) 
     {
         initialize();
 
         world_list = &world;
+        lights_list = &lights;
 
         std::ofstream out("image.ppm", std::ios::binary);
 
@@ -168,6 +170,7 @@ private:
     std::vector<tile> screen_tiles; //list storing all tiles that make up the screen
     int tile_size = 16; //side length of tile size, tile area = tile size squared
     const hittable* world_list;
+    const hittable* lights_list;
     std::atomic<int> scan_lines;
     std::atomic<int> tiles_rendered = -1;
 
@@ -269,7 +272,7 @@ private:
         for (int sample = 0; sample < samples_per_pixel; sample++)
         {
             ray r = get_ray(i, j);
-            pixel_color += ray_color(r, max_depth, *world_list);
+            pixel_color += ray_color(r, max_depth, *world_list, *lights_list);
         }
         pixel_color *= pixel_samples_scale;
         framebuffer[j * image_width + i] = pixel_color;
@@ -306,7 +309,7 @@ private:
         return center + (p.x * defocus_disk_u) + (p.y * defocus_disk_v);
     }
 
-    vec3 ray_color(const ray& r, int depth, const hittable& world) const
+    vec3 ray_color(const ray& r, int depth, const hittable& world, const hittable& lights) const
     {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if (depth <= 0) { return vec3(0, 0, 0); }
@@ -321,7 +324,7 @@ private:
         ray scattered;
         vec3 attenuation;
         float pdf_value;
-        vec3 color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+        vec3 color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
 
         if (!rec.mat->scatter(r, rec, attenuation, scattered, pdf_value))
         {
@@ -330,11 +333,46 @@ private:
 
         //vec3 color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
         
-        float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
-        pdf_value = scattering_pdf;
+        //float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+        //pdf_value = scattering_pdf;
 
-        vec3 color_from_scatter =
-            (attenuation * scattering_pdf * ray_color(scattered, depth - 1, world)) / pdf_value;
+        /*vec3 on_light = vec3(random_float(213, 343), 554, random_float(227, 332));
+        vec3 to_light = on_light - rec.p;
+        float distance_squared = to_light.length_squared();
+        to_light = unit_vector(to_light);
+
+        if (dot(to_light, rec.normal) < 0)
+        {
+            return color_from_emission;
+        }
+        float light_area = (343 - 213) * (332 - 227);
+        float light_cosine = std::fabs(to_light.y);
+        if (light_cosine < 0.000001f)
+        {
+            return color_from_emission;
+        }
+        pdf_value = distance_squared / (light_cosine * light_area);
+        scattered = ray(rec.p, to_light, r.time());*/
+
+        /*cosine_pdf surface_pdf(rec.normal);
+        scattered = ray(rec.p, surface_pdf.generate(), r.time());
+        pdf_value = surface_pdf.value(scattered.direction());*/
+
+        std::shared_ptr<hittable_pdf> p0 = std::make_shared<hittable_pdf>(lights, rec.p);
+        std::shared_ptr<cosine_pdf> p1 = std::make_shared<cosine_pdf>(rec.normal);
+        mixture_pdf mixed_pdf(p0, p1);
+
+        scattered = ray(rec.p, mixed_pdf.generate(), r.time());
+        pdf_value = mixed_pdf.value(scattered.direction());
+
+
+        float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
+
+        vec3 sample_color = ray_color(scattered, depth - 1, world, lights);
+        vec3 color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value;
+
+       // vec3 color_from_scatter =
+         //   (attenuation * scattering_pdf * ray_color(scattered, depth - 1, world, lights)) / pdf_value;
 
         return color_from_emission + color_from_scatter;
     }

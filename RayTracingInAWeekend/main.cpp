@@ -90,7 +90,7 @@ int main()
             cam.defocus_angle = 0.6f;
             cam.focus_dist = 10.0f;
 
-            cam.render(world);
+            cam.render(world, world);
         }
     else if (scene_num == 1) 
     {
@@ -105,7 +105,7 @@ int main()
         world.add(std::make_shared<quad>(vec3(0, 555, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
         world.add(std::make_shared<quad>(vec3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
         world.add(std::make_shared<quad>(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
-        
+
         std::shared_ptr<hittable> box1 = box(vec3(0, 0, 0), vec3(165, 330, 165), white);
         box1 = std::make_shared<rotate_y>(box1, 15.f);
         box1 = std::make_shared<translate>(box1, vec3(265, 0, 295));
@@ -116,6 +116,10 @@ int main()
         box2 = std::make_shared<translate>(box2, vec3(130, 0, 65));
         world.add(box2);
 
+        // Light Sources
+        auto empty_material = std::shared_ptr<material>();
+        quad lights(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), empty_material);
+
         /*world.add(std::make_shared<constant_medium>(box1, 0.01f, vec3(0, 0, 0)));
         world.add(std::make_shared<constant_medium>(box2, 0.01f, vec3(1, 1, 1)));*/
 
@@ -123,7 +127,7 @@ int main()
 
         cam.aspect_ratio = 1.0f;
         cam.image_width = 600;
-        cam.samples_per_pixel = 300;
+        cam.samples_per_pixel = 500;
         cam.max_depth = 50;
         cam.background_color = vec3(0, 0, 0);
 
@@ -134,7 +138,7 @@ int main()
 
         cam.defocus_angle = 0;
 
-        cam.render(world);
+        cam.render(world,lights);
     }
     else if (scene_num == 2) 
     {
@@ -220,5 +224,5 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth)
 
     cam.defocus_angle = 0;
 
-    cam.render(world);
+    cam.render(world, world);
 }

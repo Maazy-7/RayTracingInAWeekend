@@ -14,6 +14,7 @@ public:
         normal = unit_vector(n);
         d = dot(normal, Q);
         w = n / dot(n,n);
+        area = n.length();
         set_bounding_box();
     }
 
@@ -79,6 +80,25 @@ public:
         return true;
     }
 
+    float pdf_value(const vec3& origin, const vec3& direction) const override 
+    {
+        hit_record rec;
+        if (!this->hit(ray(origin, direction), interval(0.001f, infinity), rec))
+        {
+            return 0;
+        }
+        float distance_squared = rec.t * rec.t * direction.length_squared();
+        float cosine = std::fabs(dot(direction, rec.normal) / direction.length());
+
+        return distance_squared / (cosine * area);
+    }
+
+    vec3 random(const vec3& origin) const override 
+    {
+        vec3 p = Q + (random_float() * u) + (random_float() * v);
+        return p - origin;
+    }
+
 private:
     vec3 Q;
     vec3 u, v;
@@ -87,6 +107,7 @@ private:
     aabb bbox;
     vec3 normal;
     float d;
+    float area;
 };
 
 inline std::shared_ptr<hittable_list> box(const vec3& a, const vec3& b, std::shared_ptr<material> mat)
