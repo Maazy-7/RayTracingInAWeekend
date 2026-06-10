@@ -2,14 +2,24 @@
 
 #include "hittable.h"
 #include "onb.h"
+#include "pdf.h"
 #include "texture.h"
+
+class scatter_record 
+{
+public:
+    vec3 attenuation;
+    std::shared_ptr<pdf> pdf_ptr;
+    bool skip_pdf;
+    ray skip_pdf_ray;
+};
 
 class material 
 {
 public:
     virtual ~material() = default;
 
-    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const 
+    virtual bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const 
     {
         return false;
     }
@@ -40,26 +50,18 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
+    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override 
     {
-        //vec3 scatter_direction = random_on_hemisphere(rec.normal); //rec.normal + random_unit_vector();
-        
-        onb uvw(rec.normal);
-        vec3 scatter_direction = uvw.transform(random_cosine_direction());
-        scattered = ray(rec.p, unit_vector(scatter_direction), r_in.time());
-        // Catch degenerate scatter direction
-        if (scatter_direction.near_zero()) { scatter_direction = rec.normal; }
-        scattered = ray(rec.p, scatter_direction, r_in.time());
-        attenuation = tex->value(rec.u, rec.v, rec.p);
-        pdf = dot(uvw.w(), scattered.direction()) / pi;
+        srec.attenuation = tex->value(rec.u, rec.v, rec.p);
+        srec.pdf_ptr = std::make_shared<cosine_pdf>(rec.normal);
+        srec.skip_pdf = false;
         return true;
     }
 
     float scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const override 
     {
-        /*float cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
-        return cos_theta < 0 ? 0 : cos_theta / pi;*/
-        return 1.f / (2.f * pi);
+        float cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
+        return cos_theta < 0 ? 0 : cos_theta / pi;
     }
 
 private:
@@ -75,13 +77,17 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
+    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override 
     {
         vec3 reflected = reflect(r_in.direction(), rec.normal);
         reflected = unit_vector(reflected) + (fuzziness * random_unit_vector());
-        scattered = ray(rec.p, reflected, r_in.time());
-        attenuation = albedo;
-        return (dot(scattered.direction(), rec.normal) > 0);
+
+        srec.attenuation = albedo;
+        srec.pdf_ptr = nullptr;
+        srec.skip_pdf = true;
+        srec.skip_pdf_ray = ray(rec.p, reflected, r_in.time());
+
+        return true;
     }
 
 private:
@@ -98,9 +104,11 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
+    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override 
     {
-        attenuation = vec3(1.0f, 1.0f, 1.0f);
+        srec.attenuation = vec3(1.0, 1.0, 1.0);
+        srec.pdf_ptr = nullptr;
+        srec.skip_pdf = true;
         float ri = rec.front_face ? (1.0f / refraction_index) : refraction_index;
 
         vec3 unit_direction = unit_vector(r_in.direction());
@@ -119,7 +127,7 @@ public:
             direction = refract(unit_direction, rec.normal, ri);
         }
 
-        scattered = ray(rec.p, direction, r_in.time());
+        srec.skip_pdf_ray = ray(rec.p, direction, r_in.time());
         return true;
     }
 
@@ -179,11 +187,11 @@ public:
     
     }
 
-    bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, float& pdf) const override
-    {
-        scattered = ray(rec.p, random_unit_vector(), r_in.time());
-        attenuation = tex->value(rec.u, rec.v, rec.p);
-        pdf = 1 / (4 * pi);
+    bool scatter(const ray& r_in, const hit_record& rec, scatter_record& srec) const override {
+
+        srec.attenuation = tex->value(rec.u, rec.v, rec.p);
+        srec.pdf_ptr = std::make_shared<sphere_pdf>();
+        srec.skip_pdf = false;
         return true;
     }
 

@@ -43,6 +43,24 @@ public:
 
     aabb bounding_box() const override { return bbox; }
 
+    float pdf_value(const vec3& origin, const vec3& direction) const override 
+    {
+        float weight = 1.0f / hittable_objects .size();
+        float sum = 0.0f;
+
+        for (const auto& object : hittable_objects)
+        {
+            sum += weight * object->pdf_value(origin, direction);
+        }
+        return sum;
+    }
+
+    vec3 random(const vec3& origin) const override 
+    {
+        auto int_size = int(hittable_objects.size());
+        return hittable_objects[random_int(0, int_size - 1)]->random(origin);
+    }
+
 private:
     aabb bbox;
 };

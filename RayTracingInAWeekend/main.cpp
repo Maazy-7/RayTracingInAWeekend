@@ -106,6 +106,7 @@ int main()
         world.add(std::make_shared<quad>(vec3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
         world.add(std::make_shared<quad>(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
 
+        std::shared_ptr<material> aluminum = std::make_shared<metal>(vec3(0.8f, 0.85f, 0.88f), 0.0f);
         std::shared_ptr<hittable> box1 = box(vec3(0, 0, 0), vec3(165, 330, 165), white);
         box1 = std::make_shared<rotate_y>(box1, 15.f);
         box1 = std::make_shared<translate>(box1, vec3(265, 0, 295));
@@ -116,9 +117,15 @@ int main()
         box2 = std::make_shared<translate>(box2, vec3(130, 0, 65));
         world.add(box2);
 
+        //// Glass Sphere
+        //std::shared_ptr<dielectric> glass = std::make_shared<dielectric>(1.5f);
+        //world.add(std::make_shared<sphere>(vec3(190, 90, 190), 90.f, glass));
+
         // Light Sources
         auto empty_material = std::shared_ptr<material>();
-        quad lights(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), empty_material);
+        hittable_list lights;
+        lights.add(std::make_shared<quad>(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), empty_material));
+        //lights.add(std::make_shared<sphere>(vec3(190, 90, 190), 90.f, empty_material));
 
         /*world.add(std::make_shared<constant_medium>(box1, 0.01f, vec3(0, 0, 0)));
         world.add(std::make_shared<constant_medium>(box2, 0.01f, vec3(1, 1, 1)));*/

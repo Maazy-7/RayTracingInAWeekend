@@ -18,6 +18,11 @@ void write_color(std::ostream& out, const vec3& pixel_color)
     float g = pixel_color.y;
     float b = pixel_color.z;
 
+    // Replace NaN components with zero.
+    if (r != r) { r = 0.0; }
+    if (g != g) { g = 0.0; }
+    if (b != b) { b = 0.0; }
+
     // Apply a linear to gamma transform for gamma 2
     r = linear_to_gamma(r);
     g = linear_to_gamma(g);

@@ -321,15 +321,19 @@ private:
             return background_color;
         }
 
-        ray scattered;
-        vec3 attenuation;
-        float pdf_value;
+        scatter_record srec;
         vec3 color_from_emission = rec.mat->emitted(r, rec, rec.u, rec.v, rec.p);
 
-        if (!rec.mat->scatter(r, rec, attenuation, scattered, pdf_value))
+        if (!rec.mat->scatter(r, rec, srec))
         {
             return color_from_emission;
         }
+
+        if (srec.skip_pdf) 
+        {
+            return srec.attenuation * ray_color(srec.skip_pdf_ray, depth - 1, world, lights);
+        }
+
 
         //vec3 color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
         
@@ -358,18 +362,24 @@ private:
         scattered = ray(rec.p, surface_pdf.generate(), r.time());
         pdf_value = surface_pdf.value(scattered.direction());*/
 
-        std::shared_ptr<hittable_pdf> p0 = std::make_shared<hittable_pdf>(lights, rec.p);
+       /* std::shared_ptr<hittable_pdf> p0 = std::make_shared<hittable_pdf>(lights, rec.p);
         std::shared_ptr<cosine_pdf> p1 = std::make_shared<cosine_pdf>(rec.normal);
         mixture_pdf mixed_pdf(p0, p1);
 
         scattered = ray(rec.p, mixed_pdf.generate(), r.time());
-        pdf_value = mixed_pdf.value(scattered.direction());
+        pdf_value = mixed_pdf.value(scattered.direction());*/
+
+        std::shared_ptr<hittable_pdf> light_ptr = std::make_shared<hittable_pdf>(lights, rec.p);
+        mixture_pdf p(light_ptr, srec.pdf_ptr);
+
+        ray scattered = ray(rec.p, p.generate(), r.time());
+        float pdf_value = p.value(scattered.direction());
 
 
         float scattering_pdf = rec.mat->scattering_pdf(r, rec, scattered);
 
         vec3 sample_color = ray_color(scattered, depth - 1, world, lights);
-        vec3 color_from_scatter = (attenuation * scattering_pdf * sample_color) / pdf_value;
+        vec3 color_from_scatter = (srec.attenuation * scattering_pdf * sample_color) / pdf_value;
 
        // vec3 color_from_scatter =
          //   (attenuation * scattering_pdf * ray_color(scattered, depth - 1, world, lights)) / pdf_value;
