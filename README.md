@@ -19,17 +19,13 @@ A CPU based offline Ray Tracer implemented from Peter Shirley's 3 Book Ray Traci
 
 # Rendered Scenes
 
-### 1000 SPP Importance Sampling &emsp; &emsp; &emsp; &emsp; &emsp; &emsp; &emsp; &ensp; 8000 SPP Random Sampling
-<p float="left">
-<img src="https://github.com/user-attachments/assets/f02bced0-631a-4718-af6a-ca8fcd652f9d" width = "49%"/>
-<img src="https://github.com/user-attachments/assets/95f6871b-8b79-4373-b255-47eb762838ec" width = "49%"/>
-</p>
+| 1000 SPP Importance Sampling | 8000 SPP Random Sampling |
+| :---: | :---: |
+| ![Importance Sampling](RayTracingInAWeekend/Assets/CornellRoomImportanceSmp.png) | ![Random Sampling](RayTracingInAWeekend/Assets/CornellRoom.png) |
 
-### Specular reflections 1000 SPP Imp. Sampling &emsp; &emsp; 1500 SPP Multiple Materials
-<p float="left">
-<img src="https://github.com/user-attachments/assets/b3878226-70b4-4411-b26d-ac992ba172e5" width = "49%"/>
-<img src="https://github.com/user-attachments/assets/ab90ea9e-e8c3-436c-8093-a519c35d49db" width = "49%"/>
-</p>
+| Specular reflections 1000 SPP Imp. Sampling | 1500 SPP Multiple Materials |
+| :---: | :---: |
+| ![Specular reflections 1000 SPP Imp. Sampling](RayTracingInAWeekend/Assets/CornellRoomMirrorImportanceSmp.png) | ![1500 SPP Multiple Materials](RayTracingInAWeekend/Assets/multiObjectCornellRoom.png) |
 
 # Performance
 Since the ray tracer is CPU based it does take a while to render ideally a few minutes for a good quality image at HD. Performance however is sped up through multithreading, BVH structures and importance sampling. The Cornell room with 1000 SPP takes about 220s to render whereas the Cornell room without importance sampling and 8000 SPP took about 1300s to render, the Cornell room with the fully metallic box 1000 SPP took about 230s and the Cornell room with multiple objects 1500 SPP took about 2000s however this was probably due to a bug with the BVH structure.
